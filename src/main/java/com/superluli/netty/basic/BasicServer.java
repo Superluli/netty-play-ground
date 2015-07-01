@@ -1,4 +1,4 @@
-package com.superluli.netty;
+package com.superluli.netty.basic;
 
 import java.net.InetSocketAddress;
 import java.util.Calendar;
@@ -17,7 +17,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
-public class BasicExample {
+public class BasicServer {
 
 	public static void main(String[] args) {
 
@@ -26,9 +26,9 @@ public class BasicExample {
 		bs.setFactory(new NioServerSocketChannelFactory(Executors
 				.newCachedThreadPool(), Executors.newCachedThreadPool()));
 
-		System.out.println(bs.getPipeline().getNames());
 		bs.getPipeline().addLast("MyHandler", new MyHandler());
 		bs.bind(new InetSocketAddress(8888));
+		System.out.println("Netty Server");
 	}
 
 	static class MyHandler extends SimpleChannelHandler {
@@ -38,16 +38,14 @@ public class BasicExample {
 				ChannelStateEvent e) throws Exception {
 
 			ChannelBuffer time = ChannelBuffers.dynamicBuffer(2);
-			time.writeBytes(("Welcome! -"
-					+ Calendar.getInstance().getTime().toString() + "\n")
-					.getBytes());
-
+			String message = Calendar.getInstance().getTime().toString() + "\n";
+			time.writeBytes(message.getBytes());
 			e.getChannel().write(time).addListener(new ChannelFutureListener() {
 
 				@Override
 				public void operationComplete(ChannelFuture future)
 						throws Exception {
-					//future.getChannel().close();
+					future.getChannel().close();
 				}
 			});
 		}
@@ -56,7 +54,6 @@ public class BasicExample {
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 				throws Exception {
 
-			System.out.println("Message Received!");
 			ChannelBuffer readBuffer = (ChannelBuffer) e.getMessage();
 			byte[] bytes = new byte[readBuffer.readableBytes()];
 			readBuffer.readBytes(bytes);
