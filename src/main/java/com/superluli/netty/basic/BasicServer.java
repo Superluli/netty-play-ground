@@ -26,9 +26,39 @@ public class BasicServer {
 		bs.setFactory(new NioServerSocketChannelFactory(Executors
 				.newCachedThreadPool(), Executors.newCachedThreadPool()));
 
-		bs.getPipeline().addLast("MyHandler", new MyHandler());
+		// bs.getPipeline().addLast("MyHandler", new MyHandler());
+
+		bs.getPipeline().addLast("1", new TestHandler("1", true));
+		bs.getPipeline().addLast("2", new TestHandler("2", true));
+		bs.getPipeline().addLast("3", new TestHandler("3", false));
+		bs.getPipeline().addFirst("4", new TestHandler("4", false));
+		bs.getPipeline().addFirst("5", new TestHandler("5", false));
+
 		bs.bind(new InetSocketAddress(8888));
 		System.out.println("Netty Server");
+	}
+
+	static class TestHandler extends SimpleChannelHandler {
+
+		private String id;
+		boolean isUpStream;
+
+		public TestHandler(String id, boolean isUpStream) {
+			this.id = id;
+			this.isUpStream = isUpStream;
+		}
+
+		@Override
+		public void channelConnected(ChannelHandlerContext ctx,
+				ChannelStateEvent e) throws Exception {
+			System.out.println(this.id);
+			System.out.println(ctx);
+			if (this.isUpStream) {
+				ctx.sendUpstream(e);
+			} else {
+				ctx.sendDownstream(e);
+			}
+		}
 	}
 
 	static class MyHandler extends SimpleChannelHandler {
